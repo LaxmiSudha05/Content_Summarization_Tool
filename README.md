@@ -15,7 +15,7 @@ The collected PDFs are preprocessed by tokenizing the text data, removing stop w
 _________________________________________________________________________________________________________________________________________________________________
 3.MODEL SELECTION AND FINE TUNING:
 
-In every project, the model section is of great importance. For this project, we selected the T5 (Text-to-Text Transformer Transformation) model. T5 is an encoder-decoder model that transforms all NLP problems into a text-to-text format. We must fine-tune the model with the collected PDFs and then refine the model.
+In every project, the model section is of great importance. For this project, we selected the T5 (Text-to-Text Transformer Transformation) model. T5 is an encoder-decoder model that transforms all NLP problems into a text-to-text format and we used nltk. We must fine-tune the model with the collected PDFs and then refine the model.
 _____________________________________________________________________________________________________________________________________________________________________________________________________________
 
 4.EVALUATION OF THE MODEL:
