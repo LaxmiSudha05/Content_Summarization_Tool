@@ -1,15 +1,20 @@
 import streamlit as st
-import PyPDF2
 from PyPDF2 import PdfReader
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.probability import FreqDist
-from heapq import nlargest
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.text_rank import TextRankSummarizer
 
-# Download resources
-nltk.download('punkt')
-nltk.download('stopwords')
+# Function to summarize text using TextRank
+def summarize_text(text, num_sentences=5):
+    parser = PlaintextParser.from_string(text, Tokenizer("english"))
+    summarizer = TextRankSummarizer()
+    summary = summarizer(parser.document, num_sentences)
+    return " ".join([str(sentence) for sentence in summary])
+
+# Function to split text into specified number of lines
+def split_text_by_lines(text, num_lines=5):
+    lines = text.split('\n')
+    return '\n'.join(lines[:num_lines])
 
 # Title of the app
 st.title("PDF Summary Generator")
@@ -17,48 +22,34 @@ st.title("PDF Summary Generator")
 # File uploader widget
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-#if uploaded_file is not None:
-  # Read the PDF file
-  #pdf_reader = PyPDF2.PdfReader(uploaded_file)
+# Number input widget for number of lines
+num_lines = st.number_input("Number of lines in summary", min_value=1, max_value=100, value=5, step=1)
+
 if uploaded_file is not None:
-  # Read the PDF file
-  pdf_reader = PdfReader(uploaded_file)
-  full_text = ""
-  # Extract text from all pages
-  for page in pdf_reader.pages:
-    text = page.extract_text()
-    if text:
-      full_text += text
+    # Read the PDF file
+    pdf_reader = PdfReader(uploaded_file)
+    full_text = ""
 
-  # Display extracted text (optional)
-  st.write("Extracted text from the PDF:")
-  st.text_area("Full Text", full_text, height=300)
+    # Extract text from all pages
+    for page in pdf_reader.pages:
+        text = page.extract_text()
+        if text:
+            full_text += text
 
-  # Generate summary
-  def extractive_summary(text, num_sentences):
-    stop_words = set(stopwords.words('english'))
-    words = word_tokenize(full_text.lower())
-    words = [word for word in words if word.isalnum() and word not in stop_words]
+    # Display extracted text (optional)
+    st.write("Extracted text from the PDF:")
+    st.text_area("Full Text", full_text, height=300)
 
-    fdist = FreqDist(words)
+    # Generate summary
+    st.write("Generating summary...")
+    summary = summarize_text(full_text, num_sentences=num_lines)
 
-    sentences = sent_tokenize(full_text)
-    sentence_scores = {}
+    # Split summary by specified number of lines
+    summary_by_lines = split_text_by_lines(summary, num_lines)
 
-    for sentence in sentences:
-      for word in word_tokenize(sentence.lower()):
-        if word in fdist:
-          if sentence not in sentence_scores:
-            sentence_scores[sentence] = fdist[word]
-          else:
-            sentence_scores[sentence] += fdist[word]
-    summary_sentences = nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
-    summary = ' '.join(summary_sentences)
-    return summary
-  # Display the summary
-  st.write("Summary of the PDF:")
-  summary = extractive_summary(full_text,10)
-  st.write(summary)
+    # Display the summary
+    st.write("Summary of the PDF:")
+    st.write(summary_by_lines)
 
 # Provide additional instructions or information
 st.write("Please upload a PDF file to see its summary.")
